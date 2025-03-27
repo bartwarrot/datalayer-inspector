@@ -207,15 +207,15 @@ function connectToBackground() {
 
 // Process and store incoming dataLayer events
 function processDataLayerEvent(eventData) {
-     if (!currentInspectedUrl) {
+    if (!currentInspectedUrl) {
          console.warn("Received event but current URL is unknown. Ignoring.");
          return;
      }
-
     const eventDiv = document.createElement('div');
     eventDiv.className = 'event';
     eventDiv.dataset.timestamp = Date.now();
-    eventDiv.dataset.url = currentInspectedUrl;
+    const eventUrl = currentInspectedUrl; // Capture URL at time of event creation
+    eventDiv.dataset.url = eventUrl;
     if (eventData && eventData.event && typeof eventData.event === 'string') {
         eventDiv.dataset.eventName = eventData.event.toLowerCase();
     } else {
@@ -224,8 +224,8 @@ function processDataLayerEvent(eventData) {
 
     // --- Title Row Simplified --- //
     const title = document.createElement('h3');
-    title.style.margin = '0'; // Reset margin
-    title.style.marginBottom = '5px'; // Add some space below title
+    title.style.margin = '0';
+    title.style.marginBottom = '5px';
     if (eventData && typeof eventData === 'object' && eventData.error) {
         title.textContent = `Error: ${eventData.error}`;
         title.style.color = 'red';
@@ -239,22 +239,30 @@ function processDataLayerEvent(eventData) {
     timestamp.style.marginLeft = '8px';
     title.appendChild(timestamp);
 
-    // --- Copy Button Removed --- //
+    // --- Add URL Info --- //
+    const urlInfo = document.createElement('div');
+    urlInfo.textContent = `URL: ${eventUrl}`;
+    urlInfo.style.fontSize = '0.8em';
+    urlInfo.style.color = '#666'; // Slightly darker grey
+    urlInfo.style.marginTop = '2px'; // Space below title
+    urlInfo.style.marginBottom = '5px'; // Space above pre
+    urlInfo.style.wordBreak = 'break-all'; // Ensure long URLs wrap
 
     const pre = document.createElement('pre');
     pre.innerHTML = syntaxHighlight(eventData);
 
-    eventDiv.appendChild(title); // Add the title directly
+    eventDiv.appendChild(title);
+    eventDiv.appendChild(urlInfo); // Add the URL info here
     eventDiv.appendChild(pre);
 
     // Store in history
-    if (!historyByUrl[currentInspectedUrl]) {
-        historyByUrl[currentInspectedUrl] = [];
+    if (!historyByUrl[eventUrl]) { // Use the captured eventUrl
+        historyByUrl[eventUrl] = [];
     }
-    historyByUrl[currentInspectedUrl].unshift(eventDiv);
+    historyByUrl[eventUrl].unshift(eventDiv);
 
     // Check if event should be displayed based on current filters
-    const currentUrlCheckbox = document.getElementById(`filter-${currentInspectedUrl}`);
+    const currentUrlCheckbox = document.getElementById(`filter-${eventUrl}`);
     const eventFilterText = eventFilterInput.value.trim().toLowerCase();
     const eventName = eventDiv.dataset.eventName || '';
 

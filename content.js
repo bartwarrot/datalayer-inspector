@@ -40,12 +40,21 @@ if (!window.hasDataLayerInspectorListeners) {
                 const parsedData = JSON.parse(event.detail);
                 sendDataToBackground('DATALAYER_PUSH', parsedData);
             } catch (e) {
-                 // Check context again before logging/sending error
-                 // Make sure chrome and chrome.runtime exist before checking lastError
-                 if (!chrome || !chrome.runtime || chrome.runtime.lastError) {
-                      console.log("Content Script: Context invalidated during push event parsing. Ignoring parse error.");
+                // FIRST check if the error is the context invalidated error itself
+                 if (e instanceof Error && e.message.includes('Extension context invalidated')) {
+                      console.log("Content Script: Context invalidated during push event parsing. Error ignored.");
+                      // Optionally: return; // We might still want to check runtime.lastError below just in case?
+                      // Let's return here to be safe and prevent further checks/logging.
                       return;
                  }
+
+                 // THEN check runtime.lastError as a fallback or for other race conditions
+                 if (!chrome || !chrome.runtime || chrome.runtime.lastError) {
+                      console.log("Content Script: Context likely invalidated after parsing error. Ignoring.");
+                      return;
+                 }
+
+                // Only log as error if it's a different parsing error AND context is still valid
                 console.error('Content Script: Error parsing pushed data string:', e, event.detail);
                 sendDataToBackground('DATALAYER_PUSH', { error: 'Could not parse pushed data from page script', rawDetail: event.detail });
             }
@@ -72,12 +81,19 @@ if (!window.hasDataLayerInspectorListeners) {
                 const parsedInitialState = JSON.parse(event.detail);
                  sendDataToBackground('INITIAL_DATALAYER', parsedInitialState);
             } catch (e) {
-                 // Check context again before logging/sending error
-                 // Make sure chrome and chrome.runtime exist before checking lastError
-                 if (!chrome || !chrome.runtime || chrome.runtime.lastError) {
-                      console.log("Content Script: Context invalidated during initial state parsing. Ignoring parse error.");
+                 // FIRST check if the error is the context invalidated error itself
+                 if (e instanceof Error && e.message.includes('Extension context invalidated')) {
+                      console.log("Content Script: Context invalidated during initial state parsing. Error ignored.");
                       return;
                  }
+
+                 // THEN check runtime.lastError as a fallback
+                 if (!chrome || !chrome.runtime || chrome.runtime.lastError) {
+                      console.log("Content Script: Context likely invalidated after initial state parsing error. Ignoring.");
+                      return;
+                 }
+
+                 // Only log as error if it's a different parsing error AND context is still valid
                 console.error('Content Script: Error parsing initial state string:', e, event.detail);
                 sendDataToBackground('INITIAL_DATALAYER', { error: 'Could not parse initial state from page script', rawDetail: event.detail });
             }

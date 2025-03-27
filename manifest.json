@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "DataLayer Inspector",
   "version": "0.1.0",
-  "description": "Inspects the dataLayer in Chrome DevTools, inspired by DataSlayer.",
+  "description": "Inspects the dataLayer in Chrome DevTools, inspired by DataSlayer. Made by Bart Warrot",
   "permissions": [
     "storage",
     "scripting",
