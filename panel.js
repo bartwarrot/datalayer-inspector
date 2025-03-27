@@ -216,30 +216,35 @@ function processDataLayerEvent(eventData) {
     eventDiv.className = 'event';
     eventDiv.dataset.timestamp = Date.now();
     eventDiv.dataset.url = currentInspectedUrl;
-
-    // Store event name if present (lowercase for filtering)
     if (eventData && eventData.event && typeof eventData.event === 'string') {
         eventDiv.dataset.eventName = eventData.event.toLowerCase();
     } else {
-        eventDiv.dataset.eventName = ''; // Store empty string if no event name
+        eventDiv.dataset.eventName = '';
     }
 
+    // --- Title Row Simplified --- //
     const title = document.createElement('h3');
+    title.style.margin = '0'; // Reset margin
+    title.style.marginBottom = '5px'; // Add some space below title
     if (eventData && typeof eventData === 'object' && eventData.error) {
-         title.textContent = `Error: ${eventData.error}`;
-         title.style.color = 'red';
+        title.textContent = `Error: ${eventData.error}`;
+        title.style.color = 'red';
     } else {
         title.textContent = eventData.event ? `Event: ${eventData.event}` : 'DataLayer Push';
     }
+
     const timestamp = document.createElement('span');
     timestamp.className = 'timestamp';
     timestamp.textContent = ` (${new Date(parseInt(eventDiv.dataset.timestamp)).toLocaleTimeString()})`;
+    timestamp.style.marginLeft = '8px';
     title.appendChild(timestamp);
+
+    // --- Copy Button Removed --- //
 
     const pre = document.createElement('pre');
     pre.innerHTML = syntaxHighlight(eventData);
 
-    eventDiv.appendChild(title);
+    eventDiv.appendChild(title); // Add the title directly
     eventDiv.appendChild(pre);
 
     // Store in history
@@ -258,13 +263,10 @@ function processDataLayerEvent(eventData) {
 
     if (urlIsChecked && eventNameMatchesFilter) {
          console.log(`Event matches filters, inserting event to view.`);
-         contentDiv.insertBefore(eventDiv, contentDiv.firstChild); // Insert at top
+         contentDiv.insertBefore(eventDiv, contentDiv.firstChild);
          if (initialMessage) initialMessage.style.display = 'none';
-         // Re-sort might be needed if prepending disrupts overall order across filtered URLs
-         // Consider calling renderFilteredHistory() if strict chronological order across all visible events is crucial
     } else {
         console.log(`Event stored but does not match current display filters.`);
-         // Ensure initial message reflects reality if nothing is shown
          if (contentDiv.childElementCount === 0 && initialMessage) {
             initialMessage.textContent = 'No events match the selected filters (or history is empty).';
             initialMessage.style.display = 'block';

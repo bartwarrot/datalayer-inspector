@@ -84,9 +84,10 @@ chrome.runtime.onConnect.addListener(port => {
 
     // Function to handle messages from the DevTools panel
     const devToolsListener = (message, senderPort) => {
-        console.log("Background received message from DevTools:", message);
-        if (message.type === 'GET_DATALAYER' && message.tabId) {
-            const tabId = message.tabId;
+        console.log("Background received message from DevTools:", message.type);
+        const tabId = message.tabId; // Needed for script injection
+
+        if (message.type === 'GET_DATALAYER' && tabId) {
             // Register the connection for this tabId
             connections[tabId] = senderPort;
             console.log(`Background: Registered DevTools connection for tab ${tabId}`);
