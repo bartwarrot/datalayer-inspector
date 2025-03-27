@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>DataLayer Inspector</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 10px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    pre {
+      background-color: #f4f4f4;
+      border: 1px solid #ddd;
+      padding: 10px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: monospace;
+    }
+    .event {
+      border-bottom: 1px solid #eee;
+      padding: 10px 0;
+      margin-bottom: 5px;
+    }
+    .event:last-child {
+        border-bottom: none;
+    }
+    h3 {
+        margin-top: 0;
+        margin-bottom: 5px;
+        font-size: 1.1em;
+        color: #333;
+    }
+    .timestamp { color: #888; font-size: 0.9em; }
+    #current-url { margin-bottom: 15px; font-size: 0.9em; color: #555; border-bottom: 1px dashed #ccc; padding-bottom: 10px;}
+    #current-url span { font-weight: bold; color: #000; }
+
+    /* Basic JSON Highlighting */
+    .json-key { color: navy; }
+    .json-string { color: green; }
+    .json-number { color: darkorange; }
+    .json-boolean { color: blue; }
+    .json-null { color: grey; }
+    .json-error { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>DataLayer Inspector</h1>
+  <p id="current-url">Inspecting: <span>Loading...</span></p>
+  <button id="clear-button" style="margin-bottom: 10px;">Clear History</button>
+
+  <fieldset id="url-filter-container" style="margin-bottom: 15px; border: 1px solid #ccc; padding: 5px 10px;">
+    <legend style="font-size: 0.9em; font-weight: bold;">Filter by URL:</legend>
+    <div id="url-filters" style="max-height: 100px; overflow-y: auto;">
+        <!-- URL checkboxes will be added here -->
+    </div>
+  </fieldset>
+
+  <p id="initial-message" style="margin-top: 5px;">Waiting for dataLayer events...</p>
+  <div id="data-layer-content">
+    <!-- DataLayer events will be displayed here -->
+  </div>
+
+  <script src="panel.js"></script>
+</body>
+</html> 
