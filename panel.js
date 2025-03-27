@@ -3,6 +3,7 @@ const initialMessage = document.getElementById('initial-message');
 const urlElement = document.getElementById('current-url').querySelector('span');
 const clearButton = document.getElementById('clear-button');
 const urlFiltersDiv = document.getElementById('url-filters'); // Container for checkboxes
+const eventFilterInput = document.getElementById('event-filter-input'); // Get the event filter input
 
 let port;
 let historyByUrl = {}; // Stores event elements keyed by URL
@@ -68,18 +69,20 @@ function addUrlFilterCheckbox(url) {
     urlFiltersDiv.appendChild(wrapper);
 }
 
-// Render the history based on checked URL filters
+// Render the history based on checked URL filters AND event filter input
 function renderFilteredHistory() {
     console.log("Rendering filtered history...");
-    contentDiv.innerHTML = ''; // Clear current display
+    contentDiv.innerHTML = '';
     let displayedEvents = false;
 
     const checkedUrls = Array.from(urlFiltersDiv.querySelectorAll('input[type="checkbox"]:checked'))
                            .map(cb => cb.value);
+    const eventFilterText = eventFilterInput.value.trim().toLowerCase(); // Get event filter text
 
     console.log("Checked URLs:", checkedUrls);
+    console.log("Event Filter:", eventFilterText);
 
-    // Collect all event elements from checked URLs
+    // 1. Collect elements from checked URLs
     let elementsToShow = [];
     checkedUrls.forEach(url => {
         if (historyByUrl[url]) {
@@ -87,19 +90,26 @@ function renderFilteredHistory() {
         }
     });
 
-    // Sort elements by timestamp (newest first)
+    // 2. Filter by event name (if filter is applied)
+    if (eventFilterText) {
+        elementsToShow = elementsToShow.filter(element => {
+            const eventName = element.dataset.eventName || ''; // Get stored event name (lowercase)
+            const match = eventName.includes(eventFilterText);
+            return match;
+        });
+    }
+
+    // 3. Sort elements by timestamp (newest first)
     elementsToShow.sort((a, b) => (b.dataset.timestamp || 0) - (a.dataset.timestamp || 0));
 
-    // Append sorted elements to the display
+    // 4. Append sorted and filtered elements to the display
     elementsToShow.forEach(element => {
-        // Important: Append clones if elements might be reused or re-rendered elsewhere
-        // For this approach, we are rebuilding the list, so direct append is fine.
         contentDiv.appendChild(element);
         displayedEvents = true;
     });
 
      if (!displayedEvents && initialMessage) {
-        initialMessage.textContent = 'No events match the selected URL filters (or history is empty).';
+        initialMessage.textContent = 'No events match the selected filters (or history is empty).';
         initialMessage.style.display = 'block';
     } else if (initialMessage) {
          initialMessage.style.display = 'none';
@@ -204,8 +214,15 @@ function processDataLayerEvent(eventData) {
 
     const eventDiv = document.createElement('div');
     eventDiv.className = 'event';
-    eventDiv.dataset.timestamp = Date.now(); // Store timestamp for sorting
-    eventDiv.dataset.url = currentInspectedUrl; // Store URL for reference
+    eventDiv.dataset.timestamp = Date.now();
+    eventDiv.dataset.url = currentInspectedUrl;
+
+    // Store event name if present (lowercase for filtering)
+    if (eventData && eventData.event && typeof eventData.event === 'string') {
+        eventDiv.dataset.eventName = eventData.event.toLowerCase();
+    } else {
+        eventDiv.dataset.eventName = ''; // Store empty string if no event name
+    }
 
     const title = document.createElement('h3');
     if (eventData && typeof eventData === 'object' && eventData.error) {
@@ -225,25 +242,31 @@ function processDataLayerEvent(eventData) {
     eventDiv.appendChild(title);
     eventDiv.appendChild(pre);
 
-    // Store in history (add to beginning for default chronological order within URL)
+    // Store in history
     if (!historyByUrl[currentInspectedUrl]) {
         historyByUrl[currentInspectedUrl] = [];
     }
     historyByUrl[currentInspectedUrl].unshift(eventDiv);
 
-    // If the current URL's filter is checked, display it immediately
+    // Check if event should be displayed based on current filters
     const currentUrlCheckbox = document.getElementById(`filter-${currentInspectedUrl}`);
-    if (currentUrlCheckbox && currentUrlCheckbox.checked) {
-         console.log(`Current URL ${currentInspectedUrl} is checked, inserting event to view.`);
-         contentDiv.insertBefore(eventDiv, contentDiv.firstChild);
+    const eventFilterText = eventFilterInput.value.trim().toLowerCase();
+    const eventName = eventDiv.dataset.eventName || '';
+
+    const urlIsChecked = currentUrlCheckbox && currentUrlCheckbox.checked;
+    const eventNameMatchesFilter = !eventFilterText || eventName.includes(eventFilterText);
+
+    if (urlIsChecked && eventNameMatchesFilter) {
+         console.log(`Event matches filters, inserting event to view.`);
+         contentDiv.insertBefore(eventDiv, contentDiv.firstChild); // Insert at top
          if (initialMessage) initialMessage.style.display = 'none';
-         // Optional: If sorting is complex, might call renderFilteredHistory() instead.
-         // But direct insertion is faster for new events.
+         // Re-sort might be needed if prepending disrupts overall order across filtered URLs
+         // Consider calling renderFilteredHistory() if strict chronological order across all visible events is crucial
     } else {
-        console.log(`Current URL ${currentInspectedUrl} is NOT checked, event stored but not displayed.`);
+        console.log(`Event stored but does not match current display filters.`);
          // Ensure initial message reflects reality if nothing is shown
          if (contentDiv.childElementCount === 0 && initialMessage) {
-            initialMessage.textContent = 'No events match the selected URL filters (or history is empty).';
+            initialMessage.textContent = 'No events match the selected filters (or history is empty).';
             initialMessage.style.display = 'block';
          }
     }
@@ -251,14 +274,18 @@ function processDataLayerEvent(eventData) {
 
 // --- Event Listeners --- //
 
+// Event filter input listener
+eventFilterInput.addEventListener('input', renderFilteredHistory);
+
 // Clear button listener
 clearButton.addEventListener('click', () => {
     console.log('Clearing ALL dataLayer history and filters...');
-    historyByUrl = {}; // Clear stored data
-    urlFiltersDiv.innerHTML = ''; // Clear filter UI
-    contentDiv.innerHTML = ''; // Clear the displayed events
-    currentInspectedUrl = null; // Reset current URL tracking
-    updateInspectedUrl(); // Re-fetch current URL and add its filter
+    historyByUrl = {};
+    urlFiltersDiv.innerHTML = '';
+    eventFilterInput.value = ''; // Clear event filter input as well
+    contentDiv.innerHTML = '';
+    currentInspectedUrl = null;
+    updateInspectedUrl();
     if (initialMessage) {
         initialMessage.textContent = 'History cleared. Waiting for new dataLayer events...';
         initialMessage.style.display = 'block';
