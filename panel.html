@@ -84,7 +84,6 @@
 <body>
   <h1>DataLayer Inspector</h1>
   <p id="current-url">Inspecting: <span>Loading...</span></p>
-  <button id="clear-button" style="margin-bottom: 10px;">Clear History</button>
 
   <!-- Two-column filter layout -->
   <div class="filter-container">
@@ -114,6 +113,11 @@
         </div>
       </fieldset>
     </div>
+  </div>
+
+  <!-- Clear History & Actions Row -->
+  <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
+    <button id="clear-button" style="padding: 5px 10px;">Clear History</button>
   </div>
 
   <p id="initial-message" style="margin-top: 5px;">Waiting for dataLayer events...</p>
