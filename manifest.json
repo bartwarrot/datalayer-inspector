@@ -6,8 +6,7 @@
   "permissions": [
     "storage",
     "scripting",
-    "tabs",
-    "clipboardWrite"
+    "tabs"
   ],
   "host_permissions": [
     "<all_urls>"
