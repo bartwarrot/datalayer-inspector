@@ -17,6 +17,9 @@
       white-space: pre-wrap;
       word-wrap: break-word;
       font-family: monospace;
+      width: auto; /* Let content determine width */
+      max-width: 95%; /* But don't let it get too wide */
+      overflow-x: auto; /* Add horizontal scrolling for extremely wide content */
     }
     .event {
       border-bottom: 1px solid #eee;
@@ -36,6 +39,39 @@
     #current-url { margin-bottom: 15px; font-size: 0.9em; color: #555; border-bottom: 1px dashed #ccc; padding-bottom: 10px;}
     #current-url span { font-weight: bold; color: #000; }
 
+    /* Two-column layout */
+    .filter-container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 15px;
+      align-items: stretch;
+    }
+    .filter-column {
+      min-width: 0; /* Allow columns to shrink below content size */
+    }
+    .filter-column.event-filters {
+      width: 300px;
+      flex: 0 0 300px; /* Don't grow or shrink */
+    }
+    .filter-column.url-filters {
+      flex: 1; /* Take remaining space */
+      border-left: 1px solid #ccc;
+      padding-left: 20px;
+    }
+
+    /* Filter styling */
+    .filter-section {
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+    }
+    .filter-section:not(:last-child) {
+      border-bottom: 1px solid #eee;
+    }
+    fieldset {
+      padding: 12px;
+      border-radius: 4px;
+    }
+
     /* Basic JSON Highlighting */
     .json-key { color: navy; }
     .json-string { color: green; }
@@ -50,16 +86,34 @@
   <p id="current-url">Inspecting: <span>Loading...</span></p>
   <button id="clear-button" style="margin-bottom: 10px;">Clear History</button>
 
-  <fieldset id="url-filter-container" style="margin-bottom: 15px; border: 1px solid #ccc; padding: 5px 10px;">
-    <legend style="font-size: 0.9em; font-weight: bold;">Filter by URL:</legend>
-    <div id="url-filters" style="max-height: 100px; overflow-y: auto;">
-        <!-- URL checkboxes will be added here -->
+  <!-- Two-column filter layout -->
+  <div class="filter-container">
+    <!-- Left column: Event filters -->
+    <div class="filter-column event-filters">
+      <!-- Filter by Event Name -->
+      <div class="filter-section">
+        <label for="event-filter-input" style="display: block; font-weight: bold; margin-bottom: 5px;">Filter by Event Name:</label>
+        <input type="text" id="event-filter-input" placeholder="Type to filter by event name..." style="width: 100%; padding: 5px;">
+      </div>
+      
+      <!-- Blacklist Filter -->
+      <div class="filter-section">
+        <label for="blacklist-filter-input" style="display: block; font-weight: bold; margin-bottom: 5px;">Blacklist (hide events containing):</label>
+        <input type="text" id="blacklist-filter-input" placeholder="E.g. cookie_,gtm.js,page_view" style="width: 100%; padding: 5px;">
+        <small style="color: #666; font-size: 0.8em; margin-top: 3px; display: block;">Separate terms with commas. Case insensitive.</small>
+      </div>
     </div>
-  </fieldset>
-
-  <div id="event-filter-container" style="margin-bottom: 15px;">
-      <label for="event-filter-input" style="font-size: 0.9em; font-weight: bold; margin-right: 5px;">Filter by Event Name:</label>
-      <input type="text" id="event-filter-input" placeholder="e.g., purchase, add_to_cart" style="width: 200px; font-size: 0.9em; padding: 2px 4px;">
+    
+    <!-- Right column: URL filters -->
+    <div class="filter-column url-filters">
+      <!-- URL Filters -->
+      <fieldset id="url-filter-container" style="border: 1px solid #ccc; height: 100%; box-sizing: border-box; margin: 0;">
+        <legend style="font-weight: bold;">Filter by URL:</legend>
+        <div id="url-filters" style="max-height: 150px; overflow-y: auto;">
+          <!-- URL filters will be dynamically added here -->
+        </div>
+      </fieldset>
+    </div>
   </div>
 
   <p id="initial-message" style="margin-top: 5px;">Waiting for dataLayer events...</p>
